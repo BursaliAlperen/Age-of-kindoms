@@ -1,0 +1,6 @@
+{
+  "name": "Age of Kingdoms",
+  "description": "Rise of Kingdoms tarzı pixel art mobil strateji oyunu. İki harita, kale inşaatı, dünya haritası keşfi ve kaynak yönetimi.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

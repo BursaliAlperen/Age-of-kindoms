@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Age of Kingdoms</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="game-container">
+
+  <!-- ÜST ÇUBUK (HUD) -->
+  <header id="top-hud">
+    <div class="hud-player" id="player-profile-btn">
+      <div class="player-avatar">👑</div>
+      <div class="player-info">
+        <span class="player-name">Krallık</span>
+        <span class="player-level" id="castle-badge">Kale Sv. 1</span>
+      </div>
+    </div>
+    
+    <div class="hud-resources">
+      <div class="res-item res-wood" title="Odun">
+        <svg class="ico" viewBox="0 0 24 24"><path d="M4 7c0-2 16-2 16 0v10c0 2-16 2-16 0z"/><circle cx="12" cy="7" r="2"/></svg>
+        <span id="res-wood-val">12.5K</span>
+      </div>
+      <div class="res-item res-food" title="Yiyecek">
+        <svg class="ico" viewBox="0 0 24 24"><path d="M12 21V9"/><path d="M12 9c-3 0-5-2-5-5 3 0 5 2 5 5z"/><path d="M12 13c3 0 5-2 5-5-3 0-5 2-5 5z"/><path d="M12 17c-3 0-5-2-5-5 3 0 5 2 5 5z"/></svg>
+        <span id="res-food-val">8.5K</span>
+      </div>
+      <div class="res-item res-stone" title="Taş">
+        <svg class="ico" viewBox="0 0 24 24"><path d="M3 17l4-9 5 3 4-6 5 12z"/></svg>
+        <span id="res-stone-val">6.8K</span>
+      </div>
+      <div class="res-item res-gold" title="Altın">
+        <svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M9.5 10h4a1.5 1.5 0 010 3h-3a1.5 1.5 0 000 3h4"/></svg>
+        <span id="res-gold-val">2.5K</span>
+      </div>
+    </div>
+
+    <button id="sound-btn" class="hud-btn" aria-label="Ses Aç/Kapat">
+      <svg class="ico" id="sound-icon" viewBox="0 0 24 24"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>
+    </button>
+  </header>
+
+  <!-- GÖREV BANNER'I (RoK Tarzı Hızlı Hedef) -->
+  <div id="quest-bar">
+    <div class="quest-icon">⚔️</div>
+    <div class="quest-text" id="quest-headline">Hedef: Kalenizi Seviye 2'ye yükseltin!</div>
+    <button class="quest-go-btn" id="quest-quick-action">Git</button>
+  </div>
+
+  <!-- OYUN ALANI (İKİ HARİTA) -->
+  <main id="viewport">
+    
+    <!-- 1. KRALLIK HARİTASI (İÇ HARİTA) -->
+    <div id="kingdom-map-layer" class="map-layer active-map">
+      <!-- Bölge Hızlı Atlama Butonları -->
+      <div id="zone-shortcuts">
+        <button class="zone-pill on" data-zone="all"><span>🌐</span> Tümü</button>
+        <button class="zone-pill" data-zone="z_keep"><span style="color:#d9a441">●</span> Kale</button>
+        <button class="zone-pill" data-zone="z_military"><span style="color:#c8442c">●</span> Askeri</button>
+        <button class="zone-pill" data-zone="z_civil"><span style="color:#3f78c4">●</span> Sivil</button>
+        <button class="zone-pill" data-zone="z_mine"><span style="color:#7a7e90">●</span> Maden</button>
+        <button class="zone-pill" data-zone="z_forest"><span style="color:#2f7a3a">●</span> Orman</button>
+        <button class="zone-pill" data-zone="z_field"><span style="color:#c9b23a">●</span> Tarla</button>
+      </div>
+
+      <div id="kingdom-cam" class="map-camera">
+        <!-- Zemin Temiz Harita Resmi -->
+        <img id="kingdom-bg-img" src="assets/map_clean.png" alt="Krallık Haritası" draggable="false">
+
+        <!-- Binalar ve Slotlar Katmanı -->
+        <div id="slots-container"></div>
+
+        <!-- Parçacıklar ve Uçuşan Kaynak Efektleri -->
+        <div id="effects-container"></div>
+      </div>
+
+      <!-- İnşa Yerleştirme İpucu Bandı -->
+      <div id="placement-banner" class="hidden">
+        <span id="placement-text">İnşa etmek için yanıp sönen bir yeşil slota dokunun</span>
+        <button id="cancel-placement-btn">İptal</button>
+      </div>
+    </div>
+
+    <!-- 2. DÜNYA HARİTASI (DIŞ HARİTA) -->
+    <div id="world-map-layer" class="map-layer hidden-map">
+      <div id="world-cam" class="map-camera">
+        <canvas id="world-canvas" width="1600" height="1200"></canvas>
+        <div id="world-nodes-container"></div>
+      </div>
+      
+      <!-- Dünya Haritası Bilgi Göstergesi -->
+      <div id="world-hud-overlay">
+        <div class="world-coord-badge">📍 Krallık Bölgesi (X: 680, Y: 520)</div>
+        <div class="world-tip">Geniş kıtayı keşfetmek için sürükleyin • Düşman kamplarına ve kaynaklara dokunun</div>
+      </div>
+    </div>
+
+    <!-- SAĞ TARAFTAKİ GEÇİŞ BUTONU (EN ÖNEMLİ ÖZELLİK) -->
+    <aside id="right-nav-panel">
+      <!-- Krallık Haritasındayken: Haritaya Git Butonu -->
+      <button id="btn-goto-world" class="nav-switch-btn world-mode" title="Dünya Haritasına Git">
+        <div class="btn-glow-ring"></div>
+        <div class="btn-icon-box">
+          <svg viewBox="0 0 24 24" class="switch-svg">
+            <circle cx="12" cy="12" r="9"/>
+            <path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18"/>
+          </svg>
+        </div>
+        <span class="btn-label">Haritaya Git</span>
+      </button>
+
+      <!-- Dünya Haritasındayken: Krallığa Git Butonu -->
+      <button id="btn-goto-kingdom" class="nav-switch-btn kingdom-mode hidden" title="Kendi Krallığına Geri Dön">
+        <div class="btn-glow-ring"></div>
+        <div class="btn-icon-box">
+          <svg viewBox="0 0 24 24" class="switch-svg">
+            <path d="M3 21h18v-8l-3-2v-4h-2v2l-4-3-4 3v-2H6v4l-3 2v8z"/>
+            <path d="M9 21v-5h6v5"/>
+          </svg>
+        </div>
+        <span class="btn-label">Krallığa Git</span>
+      </button>
+    </aside>
+
+    <!-- SİSLİ GEÇİŞ ANİMASYON KATMANI (ATMOSFERİK SİS VE BULUTLAR) -->
+    <div id="fog-transition" class="hidden">
+      <div class="cloud-layer cloud-layer-1"></div>
+      <div class="cloud-layer cloud-layer-2"></div>
+      <div class="cloud-layer cloud-layer-3"></div>
+      <div class="fog-text" id="fog-label">Harita Değiştiriliyor...</div>
+    </div>
+
+  </main>
+
+  <!-- ALT MENÜ (RoK 5 SEKME) -->
+  <nav id="bottom-nav">
+    <button class="nav-tab on" data-tab="build">
+      <svg class="ico" viewBox="0 0 24 24"><path d="M14 6l4 4-8 8-4-4z"/><path d="M4 20l4-4"/><path d="M15 5l4-2 0 0"/></svg>
+      <span>İnşa</span>
+    </button>
+    <button class="nav-tab" data-tab="troops">
+      <svg class="ico" viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 5-3 8-7 10-4-2-7-5-7-10V6z"/></svg>
+      <span>Birlikler</span>
+    </button>
+    <button class="nav-tab" data-tab="academy">
+      <svg class="ico" viewBox="0 0 24 24"><path d="M4 5a2 2 0 012-2h13v16H6a2 2 0 00-2 2z"/><path d="M4 19V5"/></svg>
+      <span>Akademi</span>
+    </button>
+    <button class="nav-tab" data-tab="quests">
+      <svg class="ico" viewBox="0 0 24 24"><path d="M3 8l4 4 5-7 5 7 4-4-2 11H5z"/></svg>
+      <span>Görevler</span>
+    </button>
+    <button class="nav-tab" data-tab="inventory">
+      <svg class="ico" viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="15" rx="2"/><path d="M3 11h18M12 11v5"/></svg>
+      <span>Envanter</span>
+    </button>
+  </nav>
+
+  <!-- TOAST BİLDİRİMİ -->
+  <div id="toast"></div>
+
+  <!-- KARARTMA KATMANI (SCRIM) -->
+  <div id="scrim"></div>
+
+  <!-- ALTTAN AÇILAN PANEL (BOTTOM SHEET) -->
+  <section id="sheet" class="bottom-sheet">
+    <div class="sheet-drag-handle"></div>
+    <header class="sheet-header">
+      <h3 id="sheet-title">Bina Menüsü</h3>
+      <button class="sheet-close-btn" id="sheet-close-btn" aria-label="Kapat">✕</button>
+    </header>
+    <div class="sheet-content" id="sheet-body">
+      <!-- Dinamik İçerik JavaScript ile enjekte edilir -->
+    </div>
+  </section>
+
+</div>
+
+<script src="game.js"></script>
+</body>
+</html>
